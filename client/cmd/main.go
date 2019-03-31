@@ -20,7 +20,23 @@ var (
 	publicKeyFlag = flag.String("pub", "secrets/cert.pem", "Public Key File")
 	domainFlag    = flag.String("domain", "github.com", "Domain")
 	addressFlag   = flag.String("address", "localhost:50051", "Server Address")
+	tokenFlag     = flag.String("token", "secret", "Auth Token")
 )
+
+type tokenAuth struct {
+	token string
+}
+
+// Return value is mapped to request headers.
+func (t tokenAuth) GetRequestMetadata(ctx context.Context, in ...string) (map[string]string, error) {
+	return map[string]string{
+		"authorization": "Bearer " + t.token,
+	}, nil
+}
+
+func (tokenAuth) RequireTransportSecurity() bool {
+	return true
+}
 
 func main() {
 	// Create tls based credential.
@@ -30,7 +46,11 @@ func main() {
 	}
 
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(*addressFlag, grpc.WithTransportCredentials(creds))
+	conn, err := grpc.Dial(*addressFlag,
+		grpc.WithTransportCredentials(creds),
+		grpc.WithPerRPCCredentials(tokenAuth{
+			token: *tokenFlag,
+		}))
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
 	}
