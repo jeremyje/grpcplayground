@@ -1,0 +1,14 @@
+syntax = 'proto3';
+package grpcplayground;
+option go_package = "github.com/jeremyje/grpcplayground/proto";
+
+message EchoRequest {
+    string text = 1;
+}
+message EchoResponse {
+    string text = 1;
+}
+
+service EchoService {
+    rpc Echo(EchoRequest) returns (EchoResponse) {}
+}
